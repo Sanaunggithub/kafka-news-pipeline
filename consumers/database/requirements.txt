@@ -1,0 +1,4 @@
+aiokafka
+sqlalchemy
+asyncpg
+pydantic-settings
