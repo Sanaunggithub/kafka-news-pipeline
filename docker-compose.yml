@@ -1,0 +1,80 @@
+# filepath: /home/san/SanAung/Programming/ATI_Limited/kafka-news-pipeline/docker-compose.yml
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    env_file: .env
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    restart: unless-stopped
+    networks:
+      - pipeline-network
+
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    env_file: .env
+    depends_on:
+      - zookeeper
+    environment:
+      KAFKA_ZOOKEEPER_CONNECT: "zookeeper:2181"
+      KAFKA_LISTENERS: "PLAINTEXT://0.0.0.0:9092"
+      KAFKA_ADVERTISED_LISTENERS: "PLAINTEXT://kafka:9092"
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+    ports:
+      - "9092:9092"
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "bash -c '(echo > /dev/tcp/localhost/9092) >/dev/null 2>&1 || exit 1'"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pipeline-network
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    env_file: .env
+    depends_on:
+      - kafka
+    ports:
+      - "${KAFKA_UI_PORT}:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: local
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+    restart: unless-stopped
+    networks:
+      - pipeline-network
+
+  postgres:
+    image: postgres:15
+    env_file: .env
+    restart: unless-stopped
+    volumes:
+      - ./postgres:/docker-entrypoint-initdb.d
+      - postgres_data:/var/lib/postgresql/data 
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d news_pipeline"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - pipeline-network
+    ports:
+      - "${POSTGRES_PORT}:5432"
+  
+  qdrant:
+    image: qdrant/qdrant:latest
+    env_file: .env
+    ports:
+      - "${QDRANT_PORT}:6333"
+    restart: unless-stopped
+    networks:
+      - pipeline-network
+    volumes:
+      - qdrant_data:/qdrant/storage  
+networks:
+  pipeline-network:
+    driver: bridge
+volumes:
+  postgres_data:
+  qdrant_data:

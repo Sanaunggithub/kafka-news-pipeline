@@ -1,0 +1,10 @@
+pydantic-settings
+asyncpg
+aiokafka
+qdrant-client
+sentence-transformers
+sqlalchemy
+pytest
+pytest-asyncio
+httpx
+fastapi
