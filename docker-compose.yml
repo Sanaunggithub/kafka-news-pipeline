@@ -55,6 +55,8 @@ services:
         condition: service_healthy
     ports:
       - "${API_PORT}:${API_PORT}"
+    volumes:
+      - ./shared:/app/shared
     networks:
       - pipeline-network
     restart: unless-stopped
