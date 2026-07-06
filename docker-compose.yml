@@ -45,6 +45,25 @@ services:
     networks:
       - pipeline-network
 
+  api:
+    build:
+      context: .
+      dockerfile: api/Dockerfile
+    env_file: .env
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "${API_PORT}:${API_PORT}"
+    networks:
+      - pipeline-network
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8000/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   postgres:
     image: postgres:15
     env_file: .env
