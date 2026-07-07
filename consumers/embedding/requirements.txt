@@ -1,0 +1,4 @@
+aiokafka
+qdrant-client
+sentence-transformers
+pydantic-settings

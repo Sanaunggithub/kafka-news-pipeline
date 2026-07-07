@@ -1,0 +1,6 @@
+aiokafka
+transformers
+torch
+sqlalchemy
+asyncpg
+pydantic-settings

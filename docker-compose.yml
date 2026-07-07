@@ -109,6 +109,50 @@ services:
       - pipeline-network
     restart: unless-stopped
 
+  embedding-consumer:
+    build:
+      context: .
+      dockerfile: consumers/embedding/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./shared:/app/shared
+    networks:
+      - pipeline-network
+    restart: unless-stopped
+
+  analysis-consumer:
+    build:
+      context: .
+      dockerfile: consumers/analysis/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./shared:/app/shared
+    networks:
+      - pipeline-network
+    restart: unless-stopped
+
+  analytics-consumer:
+    build:
+      context: .
+      dockerfile: consumers/analytics/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./shared:/app/shared
+    networks:
+      - pipeline-network
+    restart: unless-stopped
+
 networks:
   pipeline-network:
     driver: bridge
