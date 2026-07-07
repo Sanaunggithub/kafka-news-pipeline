@@ -81,7 +81,7 @@ services:
     networks:
       - pipeline-network
     ports:
-      - "${POSTGRES_PORT}:5432"
+      - "${POSTGRES_EXTERNAL_PORT}:5432"
   
   qdrant:
     image: qdrant/qdrant:latest
@@ -93,6 +93,22 @@ services:
       - pipeline-network
     volumes:
       - qdrant_data:/qdrant/storage  
+  database-consumer:
+    build:
+      context: .
+      dockerfile: consumers/database/Dockerfile
+    depends_on:
+      kafka:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    env_file: .env
+    volumes:
+      - ./shared:/app/shared
+    networks:
+      - pipeline-network
+    restart: unless-stopped
+
 networks:
   pipeline-network:
     driver: bridge
