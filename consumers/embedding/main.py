@@ -2,7 +2,7 @@ import asyncio
 from qdrant_client import QdrantClient, models
 from shared.config import settings
 from shared.embeddings import embedding_service
-from shared.kafka import get_consumer
+from shared.kafka import get_consumer, get_producer
 from shared.logger import get_logger
 from shared.models import NewsEvent
 
@@ -48,6 +48,7 @@ async def store_embedding(event: NewsEvent) -> None:
 
 async def consume() -> None:
     await ensure_collection()
+    producer = await get_producer()
     consumer = await get_consumer(
         topic="news.raw",
         group_id="embedding-consumer-group",
@@ -57,9 +58,16 @@ async def consume() -> None:
             try:
                 event = NewsEvent.model_validate(message.value)
                 await store_embedding(event)
+                await producer.send_and_wait(
+                    "news.embedded",
+                    value={**event.model_dump(mode="json"), "embedding_stored": True},
+                    key=event.id.encode("utf-8"),
+                )
+                logger.info("[EmbeddingConsumer] Published to news.embedded for article %s", event.id)
             except Exception as exc:
                 logger.exception("Error processing message: %s", exc)
     finally:
+        await producer.stop()
         await consumer.stop()
         logger.info("[EmbeddingConsumer] Shutting down")
 

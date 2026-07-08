@@ -9,5 +9,6 @@ CREATE TABLE IF NOT EXISTS analysis_results (
     companies TEXT[],
     countries TEXT[],
     importance_score FLOAT,
+    urgency VARCHAR,
     created_at TIMESTAMPTZ DEFAULT NOW()
 );

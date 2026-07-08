@@ -26,6 +26,7 @@ class AnalysisResult(BaseModel):
     companies: list[str] = Field(default_factory=list)
     countries: list[str] = Field(default_factory=list)
     importance_score: float | None = None
+    urgency: str | None = None
 
 
 class AnalyticsMetric(BaseModel):

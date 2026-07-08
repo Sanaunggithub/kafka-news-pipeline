@@ -4,7 +4,7 @@ from collections import Counter
 from sqlalchemy import text
 from transformers import pipeline
 from shared.database import get_db_session
-from shared.kafka import get_consumer
+from shared.kafka import get_consumer, get_producer
 from shared.logger import get_logger
 from shared.models import AnalysisResult, NewsEvent
 
@@ -63,6 +63,18 @@ def extract_countries(text: str) -> list[str]:
     return [c for c in COUNTRY_KEYWORDS if c in lower]
 
 
+def extract_urgency(text: str) -> str:
+    lower = text.lower()
+    urgent_keywords = ["breaking", "urgent", "emergency", "critical", "immediate", "crisis", "alert"]
+    high_keywords = ["major", "significant", "important", "serious", "severe"]
+
+    if any(keyword in lower for keyword in urgent_keywords):
+        return "urgent"
+    if any(keyword in lower for keyword in high_keywords):
+        return "high"
+    return "normal"
+
+
 def extract_summary(text: str) -> str:
     sentences = re.split(r"(?<=[.!?])\s+", text.strip())
     return " ".join(sentences[:2]).strip()
@@ -79,6 +91,7 @@ async def analyze_article(event: NewsEvent) -> AnalysisResult:
         companies=extract_companies(combined),
         countries=extract_countries(combined),
         importance_score=min(1.0, 0.2 * len(extract_companies(combined)) + 0.1 * len(extract_categories(combined))),
+        urgency=extract_urgency(combined),
     )
 
 
@@ -87,10 +100,10 @@ async def store_analysis(session, result: AnalysisResult) -> None:
         text("""
             INSERT INTO analysis_results
                 (article_id, summary, sentiment, keywords, categories,
-                 companies, countries, importance_score)
+                 companies, countries, importance_score, urgency)
             VALUES
                 (:article_id, :summary, :sentiment, :keywords, :categories,
-                 :companies, :countries, :importance_score)
+                 :companies, :countries, :importance_score, :urgency)
         """),
         {
             "article_id": result.article_id,
@@ -101,11 +114,13 @@ async def store_analysis(session, result: AnalysisResult) -> None:
             "companies": result.companies,
             "countries": result.countries,
             "importance_score": result.importance_score,
+            "urgency": result.urgency,
         },
     )
 
 
 async def consume() -> None:
+    producer = await get_producer()
     consumer = await get_consumer(topic="news.raw", group_id="analysis-consumer-group")
     try:
         async for message in consumer:
@@ -114,10 +129,17 @@ async def consume() -> None:
                 result = await analyze_article(event)
                 async with get_db_session() as session:
                     await store_analysis(session, result)
+                await producer.send_and_wait(
+                    "news.analysis",
+                    value=result.model_dump(mode="json"),
+                    key=result.article_id.encode("utf-8"),
+                )
+                logger.info("[AnalysisConsumer] Published to news.analysis for article %s", result.article_id)
                 logger.info("[AnalysisConsumer] Analyzed article %s", event.id)
             except Exception as exc:
                 logger.exception("Error processing message: %s", exc)
     finally:
+        await producer.stop()
         await consumer.stop()
         logger.info("[AnalysisConsumer] Shutting down")
 
