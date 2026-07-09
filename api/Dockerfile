@@ -10,6 +10,7 @@ COPY api/requirements.txt requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY api/main.py .
+COPY api/static ./static
 
 EXPOSE ${API_PORT}
 
