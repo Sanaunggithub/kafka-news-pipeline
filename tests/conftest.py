@@ -3,6 +3,20 @@ from datetime import datetime, timezone
 
 from shared.models import AnalysisResult, NewsArticle, NewsEvent
 
+import sys
+from unittest.mock import MagicMock, patch
+
+@pytest.fixture(autouse=True, scope="session")
+def mock_sentiment_pipeline():
+    def smart_mock(text):
+        if any(word in text.lower() for word in ["terrible", "awful", "bad"]):
+            return [{"label": "LABEL_0", "score": 0.9}]
+        return [{"label": "LABEL_2", "score": 0.9}]
+    
+    mock = MagicMock(side_effect=smart_mock)
+    with patch("consumers.analysis.main.get_sentiment_analyzer", return_value=mock):
+        yield mock
+
 
 @pytest.fixture(scope="function")
 def sample_article():

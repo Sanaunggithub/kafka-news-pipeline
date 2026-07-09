@@ -31,7 +31,7 @@ def test_truncate_exact_length():
 
 def test_truncate_custom_length():
     text = "123456789012345678901"
-    assert truncate(text, 20) == "1234567890123456..."
+    assert truncate(text, 20) == "12345678901234567..."
 
 
 @pytest.mark.asyncio

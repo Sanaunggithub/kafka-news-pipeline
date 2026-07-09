@@ -10,10 +10,16 @@ from shared.models import AnalysisResult, NewsEvent
 
 logger = get_logger("AnalysisConsumer")
 
-sentiment_analyzer = pipeline(
-    "sentiment-analysis",
-    model="cardiffnlp/twitter-roberta-base-sentiment"
-)
+_sentiment_analyzer = None
+
+def get_sentiment_analyzer():
+    global _sentiment_analyzer
+    if _sentiment_analyzer is None:
+        _sentiment_analyzer = pipeline(
+            "sentiment-analysis",
+            model="cardiffnlp/twitter-roberta-base-sentiment"
+        )
+    return _sentiment_analyzer
 
 SENTIMENT_MAP = {
     "LABEL_0": "negative",
@@ -33,7 +39,8 @@ COUNTRY_KEYWORDS = ["usa", "china", "uk", "india", "russia", "germany", "france"
 
 
 def extract_sentiment(text: str) -> str:
-    result = sentiment_analyzer(text[:500])[0]
+    analyzer = get_sentiment_analyzer()
+    result = analyzer(text[:500])[0]
     return SENTIMENT_MAP.get(result.get("label", "LABEL_1"), "neutral")
 
 
