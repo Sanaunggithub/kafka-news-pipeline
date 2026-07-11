@@ -191,6 +191,9 @@ async def dashboard_article_detail(article_id: str):
         row = result.fetchone()
         return dict(row._mapping) if row is not None else {}
 
+@app.get("/article/{article_id}")
+async def article_detail_page(article_id: str):
+    return FileResponse("static/article_detail.html")
 
 @app.get("/health")
 async def health():
