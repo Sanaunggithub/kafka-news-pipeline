@@ -8,3 +8,5 @@ pytest
 pytest-asyncio
 httpx
 fastapi
+requests
+python-dotenv

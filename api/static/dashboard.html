@@ -1,83 +1,107 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>News Pipeline Dashboard</title>
+  <title>News Intelligence</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/static/style.css" />
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
 </head>
+
 <body>
-  <div class="header">
-    <div>
-      <h1>News Pipeline Dashboard</h1>
+  <header class="header">
+    <div class="header-left">
+      <span class="logo-dot"></span>
+      <div>
+        <h1>News Intelligence</h1>
+        <span class="header-subtitle">Real-time pipeline monitor</span>
+      </div>
+    </div>
+    <div class="header-right">
+      <span class="live-indicator">
+        <span class="live-dot"></span>
+        LIVE
+      </span>
       <p class="last-updated" id="last-updated">Loading...</p>
     </div>
-  </div>
+  </header>
 
   <main class="container">
     <section class="stats-grid">
       <div class="stat-card">
+        <div class="stat-icon">📰</div>
         <div class="stat-value" id="total-articles">0</div>
         <div class="stat-label">Total Articles</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon">⚡</div>
         <div class="stat-value" id="avg-latency">0.00</div>
         <div class="stat-label">Avg Latency (ms)</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon">🎭</div>
         <div class="stat-value" id="top-sentiment">--</div>
         <div class="stat-label">Top Sentiment</div>
       </div>
       <div class="stat-card">
+        <div class="stat-icon">🚨</div>
         <div class="stat-value" id="top-urgency">--</div>
         <div class="stat-label">Top Urgency</div>
       </div>
     </section>
 
     <section class="charts-grid">
-      <div class="chart-card">
-        <h3>Sentiment Distribution</h3>
+      <div class="chart-card pie">
+        <h3><span class="chart-dot green"></span>Sentiment Distribution</h3>
         <canvas id="sentimentChart"></canvas>
       </div>
-      <div class="chart-card">
-        <h3>Category Distribution</h3>
+      <div class="chart-card bar">
+        <h3><span class="chart-dot blue"></span>Category Distribution</h3>
         <canvas id="categoryChart"></canvas>
       </div>
-      <div class="chart-card">
-        <h3>Urgency Distribution</h3>
+      <div class="chart-card pie">
+        <h3><span class="chart-dot orange"></span>Urgency Distribution</h3>
         <canvas id="urgencyChart"></canvas>
       </div>
     </section>
 
     <section class="sources-card">
-      <h3>Top Sources</h3>
+      <h3><span class="chart-dot blue"></span>Top Sources</h3>
       <canvas id="sourcesChart"></canvas>
     </section>
 
     <section class="articles-card">
-      <h2>Recent Articles</h2>
-      <table class="articles-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Source</th>
-            <th>Time</th>
-            <th>Sentiment</th>
-            <th>Urgency</th>
-          </tr>
-        </thead>
-        <tbody id="articles-tbody"></tbody>
-      </table>
+      <h3><span class="chart-dot blue"></span>Recent Articles</h3>
+      <div class="table-wrapper">
+        <table class="articles-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Title</th>
+              <th>Source</th>
+              <th>Time</th>
+              <th>Sentiment</th>
+              <th>Urgency</th>
+            </tr>
+          </thead>
+          <tbody id="articles-tbody"></tbody>
+        </table>
+      </div>
     </section>
   </main>
 
-  <div class="modal-overlay" id="modal-overlay" aria-hidden="true">
-    <div class="modal" role="dialog" aria-modal="true">
+  <footer class="footer">
+    © 2026 News Intelligence
+  </footer>
+
+  <div class="modal-overlay" id="modal-overlay">
+    <div class="modal">
       <div class="modal-header">
         <h2 id="modal-title">Article Details</h2>
-        <button type="button" class="modal-close" id="modal-close" onclick="closeModal()">Close</button>
+        <button class="modal-close" id="modal-close" onclick="closeModal()">✕</button>
       </div>
       <div class="modal-body" id="modal-body"></div>
     </div>
@@ -85,4 +109,5 @@
 
   <script src="/static/dashboard.js"></script>
 </body>
+
 </html>
