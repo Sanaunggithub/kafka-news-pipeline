@@ -161,35 +161,28 @@ async def dashboard_stats():
 
 @app.get("/dashboard/articles/{article_id}")
 async def dashboard_article_detail(article_id: str):
-    logger.info("GET /dashboard/articles/%s", article_id)
     async with get_db_session() as session:
         result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT
-                    a.id,
-                    a.title,
-                    a.content,
-                    a.source,
-                    a.timestamp,
-                    ar.summary,
-                    ar.sentiment,
-                    ar.keywords,
-                    ar.categories,
-                    ar.companies,
-                    ar.countries,
-                    ar.urgency,
-                    ar.importance_score
-                FROM articles AS a
-                LEFT JOIN analysis_results AS ar
-                    ON ar.article_id = a.id
+                    a.id, a.title, a.content, a.source, a.timestamp,
+                    ar.summary, ar.sentiment, ar.keywords, ar.categories,
+                    ar.companies, ar.countries, ar.urgency, ar.importance_score
+                FROM articles a
+                LEFT JOIN analysis_results ar ON ar.article_id = a.id
                 WHERE a.id = :article_id
-                """
-            ),
+            """),
             {"article_id": article_id},
         )
         row = result.fetchone()
-        return dict(row._mapping) if row is not None else {}
+        if row is None:
+            return {}
+        data = dict(row._mapping)
+        # Replace None arrays with empty lists
+        for field in ["keywords", "categories", "companies", "countries"]:
+            if data.get(field) is None:
+                data[field] = []
+        return data
 
 @app.get("/article/{article_id}")
 async def article_detail_page(article_id: str):

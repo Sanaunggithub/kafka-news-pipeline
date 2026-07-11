@@ -2,6 +2,7 @@ import os
 import re
 import time
 from datetime import datetime, timezone
+from html.parser import HTMLParser
 
 import requests
 
@@ -11,6 +12,16 @@ load_dotenv()
 API_BASE_URL = "http://localhost:8000"
 NEWSAPI_URL = "https://newsapi.org/v2/top-headlines"
 
+def strip_html(text: str) -> str:
+    class HTMLStripper(HTMLParser):
+        def __init__(self):
+            super().__init__()
+            self.result = []
+        def handle_data(self, data):
+            self.result.append(data)
+    stripper = HTMLStripper()
+    stripper.feed(text)
+    return " ".join(stripper.result).strip()
 
 def fetch_news(api_key: str, page_size: int = 20):
     try:
@@ -25,20 +36,26 @@ def fetch_news(api_key: str, page_size: int = 20):
     except requests.RequestException as exc:
         print(f"Error fetching news: {exc}")
         return []
-
-
+    
+    
 def publish_article(article: dict):
     title = article.get("title")
     if title is None or title == "[Removed]":
         print(f"Skipping article with removed title: {article.get('url', 'unknown')}")
         return
 
-    content = article.get("content")
-    if content is None:
-        print(f"Skipping article with no content: {title}")
-        return
+    content = article.get("content") or ""
+    description = article.get("description") or ""
 
     content = re.sub(r"\s*\[\+\d+\s+chars\]\s*$", "", content).strip()
+    content = strip_html(content)
+
+    if len(content) < 100 and description:
+        content = strip_html(description)
+
+    if not content:
+        print(f"Skipping article with no content: {title}")
+        return
 
     url = article.get("url", "")
     payload = {
@@ -50,17 +67,14 @@ def publish_article(article: dict):
     }
 
     try:
-        response = requests.post(
-            f"{API_BASE_URL}/news",
-            json=payload,
-            timeout=10,
-        )
+        response = requests.post(f"{API_BASE_URL}/news", json=payload, timeout=10)
         response.raise_for_status()
-        print(f"Published article: {title}")
+        print(f"Published: {title}")
     except requests.RequestException as exc:
-        print(f"Error publishing article '{title}': {exc}")
+        print(f"Error publishing '{title}': {exc}")
 
     time.sleep(0.2)
+
 
 
 def main():

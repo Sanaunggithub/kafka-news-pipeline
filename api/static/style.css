@@ -1,23 +1,24 @@
 @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
 
 :root {
-  --bg-primary: #f0f4f8;
-  --bg-secondary: #e8edf2;
+  --bg-primary: #eef2ff;
+  --bg-secondary: #e0e7ff;
   --bg-card: #ffffff;
-  --bg-card-hover: #f8fafc;
+  --bg-card-hover: #f8faff;
   --text-primary: #0f172a;
   --text-secondary: #475569;
   --text-muted: #94a3b8;
-  --accent-blue: #2563eb;
-  --accent-blue-glow: rgba(37, 99, 235, 0.12);
-  --accent-green: #16a34a;
+  --accent-blue: #4f46e5;
+  --accent-blue-glow: rgba(79, 70, 229, 0.15);
+  --accent-green: #059669;
   --accent-orange: #ea580c;
   --accent-red: #dc2626;
-  --border-color: rgba(0, 0, 0, 0.08);
-  --border-hover: rgba(0, 0, 0, 0.16);
-  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.08);
-  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
-  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --accent-purple: #7c3aed;
+  --border-color: rgba(79, 70, 229, 0.1);
+  --border-hover: rgba(79, 70, 229, 0.25);
+  --shadow-sm: 0 1px 3px rgba(79, 70, 229, 0.08);
+  --shadow-md: 0 4px 16px rgba(79, 70, 229, 0.12);
+  --shadow-lg: 0 8px 32px rgba(79, 70, 229, 0.16);
 }
 
 * {
@@ -33,10 +34,11 @@ html {
 body {
   margin: 0;
   background:
-    radial-gradient(circle at top left, rgba(37, 99, 235, 0.05), transparent 32%),
-    linear-gradient(180deg, var(--bg-primary), var(--bg-secondary));
+    radial-gradient(circle at top left, rgba(79, 70, 229, 0.12), transparent 40%),
+    radial-gradient(circle at bottom right, rgba(124, 58, 237, 0.08), transparent 40%),
+    linear-gradient(180deg, #eef2ff, #e0e7ff);
   color: var(--text-primary);
-  font-family: "Inter", system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-family: "Inter", system-ui, -apple-system, sans-serif;
   line-height: 1.5;
   min-height: 100vh;
   animation: fadeIn 500ms ease both;
@@ -76,7 +78,7 @@ body {
   width: 100%;
   height: 64px;
   padding: 0 28px;
-  background: rgba(255, 255, 255, 0.85);
+  background: rgba(238, 242, 255, 0.85);
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   border-bottom: 1px solid var(--border-color);
@@ -110,12 +112,8 @@ body {
 }
 
 .logo-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
   background: var(--accent-blue);
   box-shadow: 0 0 0 4px var(--accent-blue-glow);
-  flex-shrink: 0;
 }
 
 .live-indicator {
@@ -205,7 +203,7 @@ body {
   font-size: 1.7rem;
   font-weight: 800;
   letter-spacing: -0.03em;
-  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
 }
@@ -332,12 +330,11 @@ body {
 }
 
 .articles-table tbody tr:hover {
-  background: rgba(37, 99, 235, 0.06);
+  background: rgba(79, 70, 229, 0.06);
 }
 
-.articles-table tbody tr td:first-child {
-  border-left: 3px solid transparent;
-  transition: border-color 150ms ease;
+.articles-table tbody tr:hover td:first-child {
+  border-left-color: var(--accent-blue);
 }
 
 .articles-table tbody tr:hover td:first-child {
@@ -369,13 +366,13 @@ body {
 }
 
 .badge-positive {
-  background: rgba(22, 163, 74, 0.12);
-  color: #15803d;
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
 }
 
-.badge-negative {
-  background: rgba(220, 38, 38, 0.12);
-  color: #b91c1c;
+.badge-normal {
+  background: rgba(5, 150, 105, 0.12);
+  color: #047857;
 }
 
 .badge-neutral {
