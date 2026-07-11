@@ -16,10 +16,10 @@ class Settings(BaseSettings):
     API_PORT: int = 8000
 
     KAFKA_SECURITY_PROTOCOL: str = "PLAINTEXT"
+    KAFKA_SASL_MECHANISM: str = "PLAIN"
+    KAFKA_SASL_USERNAME: str = ""
+    KAFKA_SASL_PASSWORD: str = ""
     KAFKA_SSL_CAFILE: str = ""
-    KAFKA_SSL_CERTFILE: str = ""
-    KAFKA_SSL_KEYFILE: str = ""
-    QDRANT_API_KEY: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
