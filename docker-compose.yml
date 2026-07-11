@@ -57,6 +57,7 @@ services:
       - "${API_PORT}:${API_PORT}"
     volumes:
       - ./shared:/app/shared
+      - ./ssl:/app/ssl
     networks:
       - pipeline-network
     restart: unless-stopped
