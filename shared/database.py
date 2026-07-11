@@ -7,11 +7,10 @@ from shared.logger import get_logger
 
 logger = get_logger("Database")
 
-engine = create_async_engine(settings.postgres_url, future=True)
-AsyncSessionLocal = async_sessionmaker(
-    bind=engine,
-    class_=AsyncSession,
-    expire_on_commit=False
+engine = create_async_engine(
+    settings.postgres_url,
+    future=True,
+    connect_args={"ssl": settings.POSTGRES_SSL_CA or False}
 )
 
 
