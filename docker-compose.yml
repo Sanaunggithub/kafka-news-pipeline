@@ -106,6 +106,7 @@ services:
     env_file: .env
     volumes:
       - ./shared:/app/shared
+      - ./ssl:/app/ssl
     networks:
       - pipeline-network
     restart: unless-stopped
@@ -120,6 +121,7 @@ services:
     env_file: .env
     volumes:
       - ./shared:/app/shared
+      - ./ssl:/app/ssl
     networks:
       - pipeline-network
     restart: unless-stopped
@@ -134,6 +136,7 @@ services:
     env_file: .env
     volumes:
       - ./shared:/app/shared
+      - ./ssl:/app/ssl
     networks:
       - pipeline-network
     restart: unless-stopped
@@ -150,6 +153,7 @@ services:
     env_file: .env
     volumes:
       - ./shared:/app/shared
+      - ./ssl:/app/ssl
     networks:
       - pipeline-network
     restart: unless-stopped
