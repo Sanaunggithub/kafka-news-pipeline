@@ -1,7 +1,9 @@
 import json
+import os
 import ssl
+import base64
+import tempfile
 from aiokafka import AIOKafkaConsumer, AIOKafkaProducer
-from aiokafka.helpers import create_ssl_context
 from shared.config import settings
 from shared.logger import get_logger
 
@@ -19,9 +21,22 @@ def _value_deserializer(value):
 
 
 def _get_ssl_context():
-    if settings.KAFKA_SECURITY_PROTOCOL in ("SSL", "SASL_SSL") and settings.KAFKA_SSL_CAFILE:
-        context = ssl.create_default_context(cafile=settings.KAFKA_SSL_CAFILE)
-        return context
+    if settings.KAFKA_SECURITY_PROTOCOL not in ("SSL", "SASL_SSL"):
+        return None
+
+    # Option 1 — cert content from env var (Render)
+    if settings.KAFKA_SSL_CA_CONTENT:
+        ca_data = base64.b64decode(settings.KAFKA_SSL_CA_CONTENT)
+        tmp = tempfile.NamedTemporaryFile(delete=False, suffix=".pem")
+        tmp.write(ca_data)
+        tmp.flush()
+        tmp.close()
+        return ssl.create_default_context(cafile=tmp.name)
+
+    # Option 2 — cert file path (local Docker)
+    if settings.KAFKA_SSL_CAFILE and os.path.exists(settings.KAFKA_SSL_CAFILE):
+        return ssl.create_default_context(cafile=settings.KAFKA_SSL_CAFILE)
+
     return None
 
 

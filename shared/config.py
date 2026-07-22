@@ -21,6 +21,9 @@ class Settings(BaseSettings):
     KAFKA_SASL_PASSWORD: str = ""
     KAFKA_SSL_CAFILE: str = ""
 
+    KAFKA_SSL_CA_CONTENT: str = ""  
+    POSTGRES_SSL_CA_CONTENT: str = ""  
+    
     POSTGRES_SSL_CA: str = ""
     
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
