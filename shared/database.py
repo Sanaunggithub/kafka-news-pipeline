@@ -5,12 +5,13 @@ from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_asyn
 from sqlalchemy.orm import DeclarativeBase
 from shared.config import settings
 from shared.logger import get_logger
+import os
 
 logger = get_logger("Database")
 
 
 def _get_connect_args():
-    if settings.POSTGRES_SSL_CA:
+    if settings.POSTGRES_SSL_CA and os.path.exists(settings.POSTGRES_SSL_CA):
         ctx = ssl.create_default_context(cafile=settings.POSTGRES_SSL_CA)
         return {"ssl": ctx}
     return {}

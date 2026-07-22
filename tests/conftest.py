@@ -4,7 +4,22 @@ from datetime import datetime, timezone
 from shared.models import AnalysisResult, NewsArticle, NewsEvent
 
 import sys
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock, patch, AsyncMock
+
+mock_engine = MagicMock()
+mock_session = MagicMock()
+mock_session.execute = AsyncMock()
+mock_session.commit = AsyncMock()
+mock_session.rollback = AsyncMock()
+mock_session.close = AsyncMock()
+
+@pytest.fixture(autouse=True, scope="session")
+def mock_database():
+    with patch("shared.database.create_async_engine", return_value=mock_engine), \
+         patch("shared.database.async_sessionmaker", return_value=MagicMock()), \
+         patch("shared.database._get_connect_args", return_value={}):
+        yield
+
 
 @pytest.fixture(autouse=True, scope="session")
 def mock_sentiment_pipeline():

@@ -1,6 +1,7 @@
 import asyncio
 import re
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from sqlalchemy import text
 from transformers import pipeline
 from shared.database import get_db_session
@@ -9,6 +10,7 @@ from shared.logger import get_logger
 from shared.models import AnalysisResult, NewsEvent
 
 logger = get_logger("AnalysisConsumer")
+executor = ThreadPoolExecutor(max_workers=2)
 
 _sentiment_analyzer = None
 
@@ -38,10 +40,15 @@ COMPANY_KEYWORDS = ["apple", "google", "microsoft", "tesla", "amazon", "openai",
 COUNTRY_KEYWORDS = ["usa", "china", "uk", "india", "russia", "germany", "france", "japan"]
 
 
-def extract_sentiment(text: str) -> str:
-    analyzer = get_sentiment_analyzer()
-    result = analyzer(text[:500])[0]
-    return SENTIMENT_MAP.get(result.get("label", "LABEL_1"), "neutral")
+async def extract_sentiment_async(text: str) -> str:
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(
+        executor,
+        lambda: SENTIMENT_MAP.get(
+            get_sentiment_analyzer()(text[:500])[0].get("label", "LABEL_1"),
+            "neutral"
+        )
+    )
 
 
 def extract_keywords(text: str) -> list[str]:
@@ -89,10 +96,11 @@ def extract_summary(text: str) -> str:
 
 async def analyze_article(event: NewsEvent) -> AnalysisResult:
     combined = f"{event.title}. {event.content}"
+    sentiment = await extract_sentiment_async(combined)
     return AnalysisResult(
         article_id=event.id,
         summary=extract_summary(combined),
-        sentiment=extract_sentiment(combined),
+        sentiment=sentiment,
         keywords=extract_keywords(combined),
         categories=extract_categories(combined),
         companies=extract_companies(combined),
@@ -134,14 +142,28 @@ async def consume() -> None:
             try:
                 event = NewsEvent.model_validate(message.value)
                 result = await analyze_article(event)
-                async with get_db_session() as session:
-                    await store_analysis(session, result)
+
+                # Retry up to 3 times waiting for database consumer to store article first
+                for attempt in range(3):
+                    try:
+                        async with get_db_session() as session:
+                            await store_analysis(session, result)
+                        break
+                    except Exception as exc:
+                        if "ForeignKeyViolation" in str(exc) and attempt < 2:
+                            logger.warning(
+                                "Article %s not in DB yet, retrying in 3s (attempt %d/3)",
+                                event.id, attempt + 1
+                            )
+                            await asyncio.sleep(3)
+                        else:
+                            raise
+
                 await producer.send_and_wait(
                     "news.analysis",
                     value=result.model_dump(mode="json"),
                     key=result.article_id.encode("utf-8"),
                 )
-                logger.info("[AnalysisConsumer] Published to news.analysis for article %s", result.article_id)
                 logger.info("[AnalysisConsumer] Analyzed article %s", event.id)
             except Exception as exc:
                 logger.exception("Error processing message: %s", exc)

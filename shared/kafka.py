@@ -63,10 +63,11 @@ async def get_consumer(topic: str, group_id: str) -> AIOKafkaConsumer:
         value_deserializer=_value_deserializer,
         security_protocol=settings.KAFKA_SECURITY_PROTOCOL,
         ssl_context=ssl_context,
-        session_timeout_ms=30000,
-        heartbeat_interval_ms=10000,
-        request_timeout_ms=40000,
+        session_timeout_ms=60000,
+        heartbeat_interval_ms=20000,
+        request_timeout_ms=70000,
         connections_max_idle_ms=540000,
+        max_poll_interval_ms=600000,
         **sasl_config,
     )
     await consumer.start()
