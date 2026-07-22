@@ -1,15 +1,14 @@
+import os
 from contextlib import asynccontextmanager
-
 from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
-
 from sqlalchemy import text
-
 from shared.database import get_db_session
 from shared.kafka import get_producer
 from shared.logger import get_logger
 from shared.models import NewsArticle
+
 
 logger = get_logger("Producer")
 
@@ -26,7 +25,16 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(title="News Pipeline API", lifespan=lifespan)
 
-app.mount("/static", StaticFiles(directory="static"), name="static")
+if os.path.exists("static"):
+    app.mount("/static", StaticFiles(directory="static"), name="static")
+
+    @app.get("/")
+    async def dashboard():
+        return FileResponse("static/dashboard.html")
+
+    @app.get("/article/{article_id}")
+    async def article_detail_page(article_id: str):
+        return FileResponse("static/article_detail.html")
 
 @app.get("/")
 async def dashboard():
