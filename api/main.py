@@ -4,11 +4,11 @@ from fastapi import FastAPI
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import FileResponse
 from sqlalchemy import text
+from shared.config import settings
 from shared.database import get_db_session
 from shared.kafka import get_producer
 from shared.logger import get_logger
 from shared.models import NewsArticle
-
 
 logger = get_logger("Producer")
 
@@ -16,6 +16,7 @@ logger = get_logger("Producer")
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     logger.info("Starting up News Pipeline API")
+    logger.info("Postgres URL: %s", settings.postgres_url)
     producer = await get_producer()
     app.state.producer = producer
     yield
@@ -36,9 +37,6 @@ if os.path.exists("static"):
     async def article_detail_page(article_id: str):
         return FileResponse("static/article_detail.html")
 
-@app.get("/")
-async def dashboard():
-    return FileResponse("static/dashboard.html")
 
 @app.post("/news")
 async def publish_news(article: NewsArticle):
@@ -77,53 +75,39 @@ async def dashboard_stats():
         total_articles = total_articles_result.scalar_one()
 
         sentiment_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT sentiment, COUNT(*) AS count
                 FROM analysis_results
                 GROUP BY sentiment
-                """
-            )
+            """)
         )
-        sentiment_counts = {
-            "positive": 0,
-            "neutral": 0,
-            "negative": 0,
-        }
+        sentiment_counts = {"positive": 0, "neutral": 0, "negative": 0}
         for row in sentiment_result.fetchall():
             value = row._mapping["sentiment"]
             if value in sentiment_counts:
                 sentiment_counts[value] = row._mapping["count"]
 
         urgency_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT urgency, COUNT(*) AS count
                 FROM analysis_results
                 GROUP BY urgency
-                """
-            )
+            """)
         )
-        urgency_counts = {
-            "normal": 0,
-            "high": 0,
-            "urgent": 0,
-        }
+        urgency_counts = {"normal": 0, "high": 0, "urgent": 0}
         for row in urgency_result.fetchall():
             value = row._mapping["urgency"]
             if value in urgency_counts:
                 urgency_counts[value] = row._mapping["count"]
 
         top_sources_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT source, COUNT(*) AS count
                 FROM articles
                 GROUP BY source
                 ORDER BY count DESC
                 LIMIT 5
-                """
-            )
+            """)
         )
         top_sources = [
             {"source": row._mapping["source"], "count": row._mapping["count"]}
@@ -131,16 +115,14 @@ async def dashboard_stats():
         ]
 
         category_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT category, COUNT(*) AS count
                 FROM (
                     SELECT unnest(COALESCE(categories, ARRAY[]::text[])) AS category
                     FROM analysis_results
                 ) AS expanded
                 GROUP BY category
-                """
-            )
+            """)
         )
         category_counts = {
             row._mapping["category"]: row._mapping["count"]
@@ -148,12 +130,10 @@ async def dashboard_stats():
         }
 
         latency_result = await session.execute(
-            text(
-                """
+            text("""
                 SELECT AVG(processing_latency_ms) AS avg_latency_ms
                 FROM analytics_metrics
-                """
-            )
+            """)
         )
         avg_latency_ms = latency_result.scalar_one()
 
@@ -186,15 +166,11 @@ async def dashboard_article_detail(article_id: str):
         if row is None:
             return {}
         data = dict(row._mapping)
-        # Replace None arrays with empty lists
         for field in ["keywords", "categories", "companies", "countries"]:
             if data.get(field) is None:
                 data[field] = []
         return data
 
-@app.get("/article/{article_id}")
-async def article_detail_page(article_id: str):
-    return FileResponse("static/article_detail.html")
 
 @app.get("/health")
 async def health():
